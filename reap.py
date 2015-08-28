@@ -6,11 +6,16 @@ def tokenize(statement):
 def reap_print(statement):
     print(statement)
 
-def reap_eval(statement):
+def reap_eval(statement, env={}):
     tokens = tokenize(statement)
 
     if tokens[0].isdigit():
         return int(tokens[0])
+    elif tokens[0] == 'def':
+            env[tokens[1]] = tokens[2]
+            return tokens[2]
+    elif tokens[0] in env:
+        return env[tokens[0]]
     elif tokens[0] == '+':
         return int(reap_eval(tokens[1])) + int(reap_eval(tokens[2]))
     elif tokens[0] == '-':
