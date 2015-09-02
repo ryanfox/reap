@@ -1,17 +1,21 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-from functions import Function, Procedure
-
+from reaptypes import Function, Variable, Int, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
 
 reserved = {'function': 'FUNCTION'}
-tokens = ['NAME', 'NUMBER', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS'] + list(reserved.values())
+tokens = ['NAME', 'NUMBER', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS',
+          'PLUS', 'MINUS', 'TIMES', 'DIVIDE'] + list(reserved.values())
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_LCURLY = r'{'
 t_RCURLY = r'}'
 t_EQUALS = r'='
+t_PLUS = r'\+'
+t_MINUS = r'-'
+t_TIMES = r'\*'
+t_DIVIDE = r'/'
 
 # Ignored characters
 t_ignore = ' \t'
@@ -45,70 +49,65 @@ def t_error(t):
 # Build the lexer
 lexer = lex.lex()
 
+precedence = (
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE')
+)
+
 names = {}
-
-
-def p_function_definition(t):
-    """statement : FUNCTION NAME paramlist fnbody"""
-    names[t[2]] = Function(t[2], t[3], t[4])
-
-
-def p_function_call(t):
-    """expression : NAME paramlist"""
-    try:
-        names[t[1]](t[2])
-    except KeyError:
-        print('function not defined: {}'.format(t[1]))
-
-
-def p_params(t):
-    """paramlist : LPAREN params RPAREN"""
-    t[0] = t[2]
-
-
-def p_paramlist(t):
-    """params : params param"""
-    t[0] = t[1] + [t[2]]
-
-
-def p_paramlist_empty(t):
-    """params : empty"""
-    t[0] = []
-
-
-def p_param(t):
-    """param : expression"""
-    t[0] = t[1]
-
-
-def p_fnbody(t):
-    """fnbody : LCURLY statements RCURLY"""
-    t[0] = t[2]
-
-
-def p_statements(t):
-    """statements : statements statement"""
-    t[0] = t[1] + [t[2]]
-
-
-def p_statement(t):
-    """statements : statement"""
-    t[0] = t[1]
-
-
-def p_assignment(t):
-    """statement : NAME EQUALS expression"""
-    names[t[1]] = t[3]
 
 
 def p_statement_expression(t):
     """statement : expression"""
+    print(t[1])
     t[0] = t[1]
 
+
+def p_function_definition(t):
+    """statement : FUNCTION NAME LPAREN RPAREN fnbody"""
+    names[t[2]] = Function(t[2], t[5])
+
+
+def p_function_call(t):
+    """expression : NAME LPAREN RPAREN"""
+    try:
+        t[0] = names[t[1]]()
+    except KeyError:
+        print('function not defined: {}'.format(t[1]))
+
+
+def p_fnbody(t):
+    """fnbody : LCURLY statement RCURLY"""
+    t[0] = t[2]
+
+
+def p_assignment(t):
+    """statement : NAME EQUALS expression"""
+    t[0] = Variable(name=t[1], value=t[3])
+
+
+def p_add(t):
+    """expression : expression PLUS expression"""
+    t[0] = AddExpr(left=t[1], right=t[3])
+
+
+def p_subtract(t):
+    """expression : expression MINUS expression"""
+    t[0] = SubtractExpr(left=t[1], right=t[3])
+
+
+def p_multiply(t):
+    """expression : expression TIMES expression"""
+    t[0] = MultiplyExpr(left=t[1], right=t[3])
+
+
+def p_divide(t):
+    """expression : expression DIVIDE expression"""
+    t[0] = DivideExpr(left=t[1], right=t[3])
 
 def p_number_expression(t):
     """expression : NUMBER"""
-    t[0] = t[1]
+    t[0] = Int(t[1])
 
 
 def p_name_expression(t):
