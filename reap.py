@@ -1,7 +1,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-from reaptypes import Function, Variable, Int, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
+from reaptypes import Function, Variable, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
 
 reserved = {'function': 'FUNCTION'}
 tokens = ['NAME', 'NUMBER', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS',
@@ -59,7 +59,6 @@ names = {}
 
 def p_statement_expression(t):
     """statement : expression"""
-    print(t[1])
     t[0] = t[1]
 
 
@@ -83,7 +82,7 @@ def p_fnbody(t):
 
 def p_assignment(t):
     """statement : NAME EQUALS expression"""
-    t[0] = Variable(name=t[1], value=t[3])
+    names[t[1]] = Variable(name=t[1], value=t[3])
 
 
 def p_add(t):
@@ -105,14 +104,18 @@ def p_divide(t):
     """expression : expression DIVIDE expression"""
     t[0] = DivideExpr(left=t[1], right=t[3])
 
+
 def p_number_expression(t):
     """expression : NUMBER"""
-    t[0] = Int(t[1])
+    t[0] = t[1]
 
 
 def p_name_expression(t):
     """expression : NAME"""
-    t[0] = t[1]
+    try:
+        t[0] = names[t[1]]
+    except KeyError:
+        print('name "{}" not defined'.format(t[1]))
 
 
 def p_empty(p):
@@ -130,4 +133,6 @@ while True:
         s = input('reap> ')
     except EOFError:
         break
-    parser.parse(s)
+    out = parser.parse(s)
+    if out:
+        print(out)

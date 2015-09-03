@@ -6,4 +6,4 @@ A programming language inspired by Lisp.  Named after the REPL.  Aims to be data
 
 ### v0.1
 
-I would consider v0.1 ready when both functions and procedures (functions with side effects) are implemented.
+I would consider v0.1 ready when both functions and procedures (functions permitting side effects) are implemented.

@@ -1,11 +1,34 @@
+class Evaluator(object):
+    """Evaluates things."""
+    def eval(self, arg):
+        if isinstance(arg, int):
+            return arg
+        elif isinstance(arg, Variable):
+            return arg.value
+        elif isinstance(arg, Procedure):
+            return arg()
+        elif isinstance(arg, AddExpr):
+            return self.eval(arg.left) + self.eval(arg.right)
+        elif isinstance(arg, SubtractExpr):
+            return self.eval(arg.left) - self.eval(arg.right)
+        elif isinstance(arg, MultiplyExpr):
+            return self.eval(arg.left) * self.eval(arg.right)
+        elif isinstance(arg, DivideExpr):
+            return self.eval(arg.left) / self.eval(arg.right)
+        else:
+            raise TypeError('unrecognized type: ' + type(arg))
+
+evaluator = Evaluator()
+
+
 class Procedure(object):
     """A function that can have side effects"""
-    def __init__(self, name, statement):
+    def __init__(self, name, body):
         self.name = name
-        self.statement = statement
+        self.body = body
 
     def __call__(self, *args):
-        return self.statement.eval()
+        return evaluator.eval(self.body)
 
 
 class Function(Procedure):
@@ -22,26 +45,22 @@ class BinaryExpr(object):
 
 class AddExpr(BinaryExpr):
     """An add expression.  Adds two things together."""
-    def eval(self):
-        return self.left.eval() + self.right.eval()
+    pass
 
 
 class SubtractExpr(BinaryExpr):
     """A subtract expression.  Returns the difference between two things."""
-    def eval(self):
-        return self.left.eval() - self.right.eval()
+    pass
 
 
 class MultiplyExpr(BinaryExpr):
     """A multiply expression.  Returns the product of two things."""
-    def eval(self):
-        return self.left.eval() * self.right.eval()
+    pass
 
 
 class DivideExpr(BinaryExpr):
     """A division expression.  Returns the quotient between two things."""
-    def eval(self):
-        return self.left.eval() / self.right.eval()
+    pass
 
 
 class Variable(object):
@@ -50,11 +69,8 @@ class Variable(object):
         self.name = name
         self.value = value
 
-
-class Int(object):
-    """An integer.  What do you want from me"""
-    def __init__(self, value):
-        self.value = value
-
-    def eval(self):
+    def __repr__(self):
         return self.value
+
+    def __str__(self):
+        return str(self.value)
