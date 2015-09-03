@@ -1,22 +1,27 @@
 class Evaluator(object):
     """Evaluates things."""
-    def eval(self, arg):
-        if isinstance(arg, int):
+    def eval(self, arg, scope={}):
+        if isinstance(arg, list):
+            for argument in arg[:-1]:
+                self.eval(argument, scope)
+            return self.eval(arg[-1], scope)
+        elif isinstance(arg, int):
             return arg
-        elif isinstance(arg, Variable):
-            return self.eval(arg.value)
+        elif arg in scope:
+            return self.eval(scope[arg], scope)
         elif isinstance(arg, Procedure):
             return arg()
         elif isinstance(arg, AddExpr):
-            return self.eval(arg.left) + self.eval(arg.right)
+            return self.eval(arg.left, scope) + self.eval(arg.right, scope)
         elif isinstance(arg, SubtractExpr):
-            return self.eval(arg.left) - self.eval(arg.right)
+            return self.eval(arg.left, scope) - self.eval(arg.right, scope)
         elif isinstance(arg, MultiplyExpr):
-            return self.eval(arg.left) * self.eval(arg.right)
+            return self.eval(arg.left, scope) * self.eval(arg.right, scope)
         elif isinstance(arg, DivideExpr):
-            return self.eval(arg.left) / self.eval(arg.right)
-        elif isinstance(arg, list):
-            return self.eval(arg[-1])
+            return self.eval(arg.left, scope) / self.eval(arg.right, scope)
+        elif isinstance(arg, AssignStmt):
+            scope[arg.left] = self.eval(arg.right, scope)
+            return scope[arg.left]
         else:
             raise TypeError('unrecognized type: ' + type(arg))
 
@@ -25,13 +30,19 @@ evaluator = Evaluator()
 
 class Procedure(object):
     """A function that can have side effects"""
-    def __init__(self, name, params, body):
+    def __init__(self, name, params, body, scope={}):
         self.name = name
         self.params = params
         self.body = body
+        self.scope = scope
 
     def __call__(self, *args):
-        return evaluator.eval(self.body)
+        if len(args) != len(self.params):
+            raise TypeError('{} takes {} args, received {}'.format(self.name, len(self.params), len(args)))
+        localscope = self.scope.copy()
+        params = {key: val for key, val in zip(self.params, args)}
+        localscope.update(params)
+        return evaluator.eval(self.body, localscope)
 
 
 class Function(Procedure):
@@ -69,11 +80,7 @@ class DivideExpr(BinaryExpr):
     pass
 
 
-class Variable(object):
-    """A variable.  Has a name.  Stores a value"""
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
-
+class AssignStmt(BinaryExpr):
+    """An assignment expression.  E.g. x = 10"""
     def __str__(self):
-        return str(self.value)
+        return str(evaluator.eval(self))

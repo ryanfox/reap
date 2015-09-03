@@ -1,7 +1,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-from reaptypes import Function, Variable, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
+from reaptypes import Function, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr, AssignStmt
 
 reserved = {'function': 'FUNCTION'}
 tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'COMMA', 'EQUALS',
@@ -64,7 +64,7 @@ precedence = (
     ('left', 'TIMES', 'DIVIDE')
 )
 
-names = {}
+globalscope = {}
 
 
 def p_statement_expression(t):
@@ -74,7 +74,7 @@ def p_statement_expression(t):
 
 def p_function_definition(t):
     """statement : FUNCTION NAME LPAREN params RPAREN fnbody"""
-    names[t[2]] = Function(t[2], t[4], t[6])
+    globalscope[t[2]] = Function(t[2], t[4], t[6], globalscope)
 
 
 def p_params(t):
@@ -97,7 +97,7 @@ def p_end_params(t):
     t[0] = t[1] + [t[2]]
 
 
-def p_end_param_empty(t):
+def p_end_params_empty(t):
     """endparams : empty"""
     t[0] = []
 
@@ -108,11 +108,41 @@ def p_end_param(t):
 
 
 def p_function_call(t):
-    """expression : NAME LPAREN RPAREN"""
+    """expression : NAME LPAREN args RPAREN"""
     try:
-        t[0] = names[t[1]]()
+        t[0] = globalscope[t[1]](*t[3])
     except KeyError:
         print('function not defined: {}'.format(t[1]))
+
+
+def p_args(t):
+    """args : barearg endargs"""
+    t[0] = [t[1]] + t[2]
+
+
+def p_args_empty(t):
+    """args : empty"""
+    t[0] = []
+
+
+def p_bare_arg(t):
+    """barearg : expression"""
+    t[0] = t[1]
+
+
+def p_end_args(t):
+    """endargs : endargs endarg"""
+    t[0] = t[1] + [t[2]]
+
+
+def p_end_args_empty(t):
+    """endargs : empty"""
+    t[0] = []
+
+
+def p_end_arg(t):
+    """endarg : COMMA barearg"""
+    t[0] = t[2]
 
 
 def p_fnbody(t):
@@ -132,7 +162,7 @@ def p_statements_statement(t):
 
 def p_assignment(t):
     """statement : NAME EQUALS expression"""
-    t[0] = names[t[1]] = Variable(name=t[1], value=t[3])
+    t[0] = AssignStmt(t[1], t[3])
 
 
 def p_add(t):
@@ -172,10 +202,7 @@ def p_float(t):
 
 def p_name_expression(t):
     """expression : NAME"""
-    try:
-        t[0] = names[t[1]]
-    except KeyError:
-        print('name "{}" not defined'.format(t[1]))
+    t[0] = t[1]
 
 
 def p_empty(p):
