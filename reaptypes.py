@@ -23,8 +23,9 @@ evaluator = Evaluator()
 
 class Procedure(object):
     """A function that can have side effects"""
-    def __init__(self, name, body):
+    def __init__(self, name, params, body):
         self.name = name
+        self.params = params
         self.body = body
 
     def __call__(self, *args):

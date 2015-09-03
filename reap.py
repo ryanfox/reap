@@ -4,13 +4,14 @@ import ply.yacc as yacc
 from reaptypes import Function, Variable, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
 
 reserved = {'function': 'FUNCTION'}
-tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS',
+tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'COMMA', 'EQUALS',
           'PLUS', 'MINUS', 'TIMES', 'DIVIDE'] + list(reserved.values())
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_LCURLY = r'{'
 t_RCURLY = r'}'
+t_COMMA = r','
 t_EQUALS = r'='
 t_PLUS = r'\+'
 t_MINUS = r'-'
@@ -72,8 +73,38 @@ def p_statement_expression(t):
 
 
 def p_function_definition(t):
-    """statement : FUNCTION NAME LPAREN RPAREN fnbody"""
-    names[t[2]] = Function(t[2], t[5])
+    """statement : FUNCTION NAME LPAREN params RPAREN fnbody"""
+    names[t[2]] = Function(t[2], t[4], t[6])
+
+
+def p_params(t):
+    """params : bareparam endparams"""
+    t[0] = [t[1]] + t[2]
+
+
+def p_params_empty(t):
+    """params : empty"""
+    t[0] = []
+
+
+def p_bare_param(t):
+    """bareparam : NAME"""
+    t[0] = t[1]
+
+
+def p_end_params(t):
+    """endparams : endparams endparam"""
+    t[0] = t[1] + [t[2]]
+
+
+def p_end_param_empty(t):
+    """endparams : empty"""
+    t[0] = []
+
+
+def p_end_param(t):
+    """endparam : COMMA bareparam"""
+    t[0] = t[2]
 
 
 def p_function_call(t):
