@@ -116,13 +116,23 @@ def p_function_call(t):
 
 
 def p_fnbody(t):
-    """fnbody : LCURLY statement RCURLY"""
+    """fnbody : LCURLY statements RCURLY"""
     t[0] = t[2]
+
+
+def p_statements(t):
+    """statements : statements statement"""
+    t[0] = t[1] + [t[2]]
+
+
+def p_statements_statement(t):
+    """statements : statement"""
+    t[0] = [t[1]]
 
 
 def p_assignment(t):
     """statement : NAME EQUALS expression"""
-    names[t[1]] = Variable(name=t[1], value=t[3])
+    t[0] = names[t[1]] = Variable(name=t[1], value=t[3])
 
 
 def p_add(t):

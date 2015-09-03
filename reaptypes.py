@@ -4,7 +4,7 @@ class Evaluator(object):
         if isinstance(arg, int):
             return arg
         elif isinstance(arg, Variable):
-            return arg.value
+            return self.eval(arg.value)
         elif isinstance(arg, Procedure):
             return arg()
         elif isinstance(arg, AddExpr):
@@ -15,6 +15,8 @@ class Evaluator(object):
             return self.eval(arg.left) * self.eval(arg.right)
         elif isinstance(arg, DivideExpr):
             return self.eval(arg.left) / self.eval(arg.right)
+        elif isinstance(arg, list):
+            return self.eval(arg[-1])
         else:
             raise TypeError('unrecognized type: ' + type(arg))
 
@@ -43,6 +45,9 @@ class BinaryExpr(object):
         self.left = left
         self.right = right
 
+    def __str__(self):
+        return str(evaluator.eval(self))
+
 
 class AddExpr(BinaryExpr):
     """An add expression.  Adds two things together."""
@@ -69,9 +74,6 @@ class Variable(object):
     def __init__(self, name, value):
         self.name = name
         self.value = value
-
-    def __repr__(self):
-        return self.value
 
     def __str__(self):
         return str(self.value)
