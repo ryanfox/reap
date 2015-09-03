@@ -4,7 +4,7 @@ import ply.yacc as yacc
 from reaptypes import Function, Variable, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr
 
 reserved = {'function': 'FUNCTION'}
-tokens = ['NAME', 'NUMBER', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS',
+tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'EQUALS',
           'PLUS', 'MINUS', 'TIMES', 'DIVIDE'] + list(reserved.values())
 
 t_LPAREN = r'\('
@@ -27,12 +27,21 @@ def t_NAME(t):
     return t
 
 
-def t_NUMBER(t):
+def t_FLOAT(t):
+    r'(\d+\.\d*)|(\.\d+)'
+    try:
+        t.value = float(t.value)
+    except ValueError:
+        print('Unable to parse float value: {}'.format(t.value))
+    return t
+
+
+def t_INT(t):
     r'\d+'
     try:
         t.value = int(t.value)
     except ValueError:
-        print("Integer value too large %d", t.value)
+        print('Integer value too large {}'.format(t.value))
         t.value = 0
     return t
 
@@ -106,7 +115,17 @@ def p_divide(t):
 
 
 def p_number_expression(t):
-    """expression : NUMBER"""
+    """expression : number"""
+    t[0] = t[1]
+
+
+def p_int(t):
+    """number : INT"""
+    t[0] = t[1]
+
+
+def p_float(t):
+    """number : FLOAT"""
     t[0] = t[1]
 
 
