@@ -218,7 +218,11 @@ parser = yacc.yacc()
 evaluator = Evaluator()
 while True:
     try:
-        userinput = input('reap> ')
+        userinput = ''
+        line = input('reap> ')
+        while line != '':
+            userinput += line
+            line = input()
     except EOFError:
         break
     ast = parser.parse(userinput)
