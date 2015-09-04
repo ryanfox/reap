@@ -1,6 +1,9 @@
+globalscope = {}
+
+
 class Evaluator(object):
     """Evaluates things."""
-    def eval(self, arg, scope={}):
+    def eval(self, arg, scope=globalscope):
         if isinstance(arg, list):
             for argument in arg[:-1]:
                 self.eval(argument, scope)
@@ -9,8 +12,11 @@ class Evaluator(object):
             return arg
         elif arg in scope:
             return self.eval(scope[arg], scope)
+        elif isinstance(arg, FunctionCallExpr):
+            return scope[arg.function](*arg.args)
         elif isinstance(arg, Procedure):
-            return arg()
+            scope[arg.name] = arg
+            return arg
         elif isinstance(arg, AddExpr):
             return self.eval(arg.left, scope) + self.eval(arg.right, scope)
         elif isinstance(arg, SubtractExpr):
@@ -30,7 +36,7 @@ evaluator = Evaluator()
 
 class Procedure(object):
     """A function that can have side effects"""
-    def __init__(self, name, params, body, scope={}):
+    def __init__(self, name, params, body, scope=globalscope):
         self.name = name
         self.params = params
         self.body = body
@@ -50,14 +56,18 @@ class Function(Procedure):
     pass
 
 
+class FunctionCallExpr(object):
+    """An expression containing a function call.  E.g. foo()"""
+    def __init__(self, function, *args):
+        self.function = function
+        self.args = args
+
+
 class BinaryExpr(object):
     """A binary expression.  Has a left and right side."""
     def __init__(self, left, right):
         self.left = left
         self.right = right
-
-    def __str__(self):
-        return str(evaluator.eval(self))
 
 
 class AddExpr(BinaryExpr):
@@ -82,5 +92,5 @@ class DivideExpr(BinaryExpr):
 
 class AssignStmt(BinaryExpr):
     """An assignment expression.  E.g. x = 10"""
-    def __str__(self):
-        return str(evaluator.eval(self))
+    pass
+

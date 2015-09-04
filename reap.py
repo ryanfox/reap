@@ -1,7 +1,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-from reaptypes import Function, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr, AssignStmt
+from reaptypes import Function, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr, AssignStmt, FunctionCallExpr, Evaluator
 
 reserved = {'function': 'FUNCTION'}
 tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'COMMA', 'EQUALS',
@@ -74,7 +74,7 @@ def p_statement_expression(t):
 
 def p_function_definition(t):
     """statement : FUNCTION NAME LPAREN params RPAREN fnbody"""
-    globalscope[t[2]] = Function(t[2], t[4], t[6], globalscope)
+    t[0] = Function(t[2], t[4], t[6])
 
 
 def p_params(t):
@@ -110,7 +110,7 @@ def p_end_param(t):
 def p_function_call(t):
     """expression : NAME LPAREN args RPAREN"""
     try:
-        t[0] = globalscope[t[1]](*t[3])
+        t[0] = FunctionCallExpr(t[1], *t[3])
     except KeyError:
         print('function not defined: {}'.format(t[1]))
 
@@ -215,11 +215,13 @@ def p_error(t):
 
 parser = yacc.yacc()
 
+evaluator = Evaluator()
 while True:
     try:
-        s = input('reap> ')
+        userinput = input('reap> ')
     except EOFError:
         break
-    out = parser.parse(s)
+    ast = parser.parse(userinput)
+    out = evaluator.eval(ast)
     if out:
         print(out)
