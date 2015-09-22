@@ -41,7 +41,7 @@ class Evaluator(object):
 
             if len(arg.args) != len(function.params):
                 raise TypeError('{} takes {} args, received {}'.format(function.name, len(function.params), len(arg.args)))
-            params = {key: val for key, val in zip(function.params, arg.args)}
+            params = {key: self.eval(val) for key, val in zip(function.params, arg.args)}
             function.scope.update(params)
             return self.eval(function.body, function.scope)
 
