@@ -1,7 +1,8 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-from reaptypes import Function, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr, AssignStmt, FunctionCallExpr, Evaluator
+from reaptypes import Function, AddExpr, SubtractExpr, MultiplyExpr, DivideExpr, AssignStmt, FunctionCallExpr, Evaluator, \
+    Scope
 
 reserved = {'function': 'FUNCTION'}
 tokens = ['NAME', 'INT', 'FLOAT', 'LPAREN', 'RPAREN', 'LCURLY', 'RCURLY', 'COMMA', 'EQUALS',
@@ -63,8 +64,6 @@ precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE')
 )
-
-globalscope = {}
 
 
 def p_statement_expression(t):
@@ -215,7 +214,9 @@ def p_error(t):
 
 parser = yacc.yacc()
 
-evaluator = Evaluator()
+globalscope = Scope()
+evaluator = Evaluator(globalscope)
+
 while True:
     try:
         userinput = ''
